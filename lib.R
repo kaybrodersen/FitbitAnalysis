@@ -9,14 +9,23 @@ suppressPackageStartupMessages({
   library(purrr)
 })
 
+DropNA <- function(x) {
+  assert_that(is.vector(x))
+  return(x[!is.na(x)])
+}
+
 PascalCase <- function(x) {
   assert_that(is.character(x))
   return(gsub("(^|[^[:alnum:]])([[:alnum:]])", "\\U\\2", x, perl = TRUE))
 }
 
-DropNA <- function(x) {
-  assert_that(is.vector(x))
-  return(x[!is.na(x)])
+LoadJsonLogFiles <- function(files) {
+  assert_that(is.vector(files), is.character(files), length(files) > 0)
+  logs <- purrr::map_dfr(files, function(absolute_filename) {
+    message(basename(absolute_filename))
+    jsonlite::fromJSON(absolute_filename)
+  })
+  return(logs)
 }
 
 LoadActiveMinutesLogs <- function(absolute_file_pattern) {
@@ -24,11 +33,8 @@ LoadActiveMinutesLogs <- function(absolute_file_pattern) {
   path <- dirname(absolute_file_pattern)
   file_pattern <- basename(absolute_file_pattern)
   files <- list.files(path, file_pattern, full.names = TRUE)
-  assert_that(length(files) > 0, msg = paste0("no log files found in ", path))
-  logs <- purrr::map_dfr(files, function(absolute_filename) {
-    message(basename(absolute_filename))
-    jsonlite::fromJSON(absolute_filename)
-  })
+  assert_that(length(files) > 0, msg = paste("no log files found in", path))
+  logs <- LoadJsonLogFiles(files)
   assert_that(nrow(logs) > 0)
   return(logs)
 }
@@ -66,4 +72,39 @@ ProcessActivityLogs <- function(activity_logs) {
   assert_that(nrow(activity_data) > 0)
   assert_that(!any(duplicated(activity_data$Date)))
   return(activity_data)
+}
+
+LoadSleepLogs <- function(input_path) {
+  assert_that(is.string(input_path))
+  kPath <- file.path(input_path, "Sleep")
+  kFilePattern <- "^sleep-.*\\.json$"
+  files <- list.files(kPath, kFilePattern, full.names = TRUE)
+  assert_that(length(files) > 0, msg = paste("no log files found in", kPath))
+  sleep_logs <- LoadJsonLogFiles(files)
+  assert_that(nrow(sleep_logs) > 0)
+  return(sleep_logs)
+}
+
+ProcessSleepLogs <- function(sleep_logs) {
+  assert_that(is.data.frame(sleep_logs), nrow(sleep_logs) > 0)
+  sleep_data <- sleep_logs %>%
+    setNames(PascalCase(names(.))) %>%
+    dplyr::mutate(
+      StartTime = lubridate::as_datetime(StartTime),
+      EndTime = lubridate::as_datetime(EndTime)) %>%
+    dplyr::mutate(
+      Date = as.Date(DateOfSleep) - 1,
+      DeepMinutes = Levels$summary$deep$minutes,
+      RemMinutes = Levels$summary$rem$minutes,
+      LightMinutes = Levels$summary$light$minutes,
+      WakeMinutes = Levels$summary$wake$minutes) %>%
+    dplyr::filter(MainSleep) %>%
+    dplyr::select(Date, MinutesAsleep, MinutesAwake, TimeInBed, Efficiency,
+                  DeepMinutes, RemMinutes, LightMinutes, WakeMinutes)
+  sleep_data <- sleep_data[!duplicated(sleep_data), ]
+  sleep_data <- sleep_data %>%
+    dplyr::arrange(Date)
+  assert_that(nrow(sleep_data) > 0)
+  assert_that(!any(duplicated(sleep_data$Date)))
+  return(sleep_data)
 }
