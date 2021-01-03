@@ -1,5 +1,9 @@
 # Library functions for importing and parsing Fitbit sensor data.
 # Author: khbrodersen@gmail.com.
+#
+# The top-level function is `LoadFitbitData()`, which takes in the path to a
+# Fitbit download directory and returns a data frame of activity and sleep
+# metrics, keyed on `Date`.
 
 suppressPackageStartupMessages({
   library(assertthat)
@@ -99,7 +103,8 @@ ProcessSleepLogs <- function(sleep_logs) {
       LightMinutes = Levels$summary$light$minutes,
       WakeMinutes = Levels$summary$wake$minutes) %>%
     dplyr::filter(MainSleep) %>%
-    dplyr::select(Date, MinutesAsleep, MinutesAwake, TimeInBed, Efficiency,
+    dplyr::select(Date, StartTime, EndTime,
+                  MinutesAsleep, MinutesAwake, TimeInBed, Efficiency,
                   DeepMinutes, RemMinutes, LightMinutes, WakeMinutes)
   sleep_data <- sleep_data[!duplicated(sleep_data), ]
   sleep_data <- sleep_data %>%
@@ -107,4 +112,16 @@ ProcessSleepLogs <- function(sleep_logs) {
   assert_that(nrow(sleep_data) > 0)
   assert_that(!any(duplicated(sleep_data$Date)))
   return(sleep_data)
+}
+
+LoadFitbitData <- function(input_path) {
+  activity_logs <- LoadActivityLogs(input_path)
+  activity_data <- ProcessActivityLogs(activity_logs)
+  sleep_logs <- LoadSleepLogs(input_path)
+  sleep_data <- ProcessSleepLogs(sleep_logs)
+  dates <- sort(unique(c(activity_data$Date, sleep_data$Date)))
+  data <- data.frame(Date = dates) %>%
+    dplyr::full_join(activity_data, by = "Date") %>%
+    dplyr::full_join(sleep_data, by = "Date")
+  return(data)
 }
