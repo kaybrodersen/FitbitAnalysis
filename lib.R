@@ -3,7 +3,7 @@
 #
 # The top-level function is `LoadFitbitData()`, which takes in the path to a
 # Fitbit download directory and returns a data frame of activity and sleep
-# metrics, keyed on `Date`.
+# metrics, keyed on `date`.
 
 suppressPackageStartupMessages({
   library(assertthat)
@@ -66,15 +66,15 @@ ProcessActivityLogs <- function(activity_logs) {
   activity_data <- activity_logs %>%
     purrr::reduce(full_join, by = "dateTime") %>%
     dplyr::mutate(
-      Date = as.Date(lubridate::parse_date_time(dateTime, "%m/%d/%y H:M:S")),
+      date = as.Date(lubridate::parse_date_time(dateTime, "%m/%d/%y H:M:S")),
       SedentaryMinutes = as.numeric(SedentaryMinutes),
       LightlyActiveMinutes = as.numeric(LightlyActiveMinutes),
       ModeratelyActiveMinutes = as.numeric(ModeratelyActiveMinutes),
       VeryActiveMinutes = as.numeric(VeryActiveMinutes)) %>%
-    dplyr::select(Date, everything(), -dateTime) %>%
-    dplyr::arrange(Date)
+    dplyr::select(date, everything(), -dateTime) %>%
+    dplyr::arrange(date)
   assert_that(nrow(activity_data) > 0)
-  assert_that(!any(duplicated(activity_data$Date)))
+  assert_that(!any(duplicated(activity_data$date)))
   return(activity_data)
 }
 
@@ -97,20 +97,20 @@ ProcessSleepLogs <- function(sleep_logs) {
       StartTime = lubridate::as_datetime(StartTime),
       EndTime = lubridate::as_datetime(EndTime)) %>%
     dplyr::mutate(
-      Date = as.Date(DateOfSleep) - 1,
+      date = as.Date(DateOfSleep) - 1,
       DeepMinutes = Levels$summary$deep$minutes,
       RemMinutes = Levels$summary$rem$minutes,
       LightMinutes = Levels$summary$light$minutes,
       WakeMinutes = Levels$summary$wake$minutes) %>%
     dplyr::filter(MainSleep) %>%
-    dplyr::select(Date, StartTime, EndTime,
+    dplyr::select(date, StartTime, EndTime,
                   MinutesAsleep, MinutesAwake, TimeInBed, Efficiency,
                   DeepMinutes, RemMinutes, LightMinutes, WakeMinutes)
   sleep_data <- sleep_data[!duplicated(sleep_data), ]
   sleep_data <- sleep_data %>%
-    dplyr::arrange(Date)
+    dplyr::arrange(date)
   assert_that(nrow(sleep_data) > 0)
-  assert_that(!any(duplicated(sleep_data$Date)))
+  assert_that(!any(duplicated(sleep_data$date)))
   return(sleep_data)
 }
 
@@ -119,9 +119,9 @@ LoadFitbitData <- function(input_path) {
   activity_data <- ProcessActivityLogs(activity_logs)
   sleep_logs <- LoadSleepLogs(input_path)
   sleep_data <- ProcessSleepLogs(sleep_logs)
-  dates <- sort(unique(c(activity_data$Date, sleep_data$Date)))
-  data <- data.frame(Date = dates) %>%
-    dplyr::full_join(activity_data, by = "Date") %>%
-    dplyr::full_join(sleep_data, by = "Date")
+  dates <- sort(unique(c(activity_data$date, sleep_data$date)))
+  data <- data.frame(date = dates) %>%
+    dplyr::full_join(activity_data, by = "date") %>%
+    dplyr::full_join(sleep_data, by = "date")
   return(data)
 }
