@@ -7,7 +7,8 @@
 #   head(data)
 #   PlotMetrics(data)
 #   PlotMetrics(data %>% dplyr::select(date, VeryActiveMinutes))
-#   PlotAvgMetricsPerWeekday(data)
+#   PlotWeeklyMetrics(data)
+#   PlotWeekdayMetrics(data)
 
 suppressPackageStartupMessages({
   library(dplyr)
@@ -18,7 +19,7 @@ suppressPackageStartupMessages({
 })
 
 kPlotSize = 16
-kColorLightBlue <- "#cfe2f3"
+kColorLightBlue <- "#9fc5e8"
 kColorDarkBlue <- "#0b5394"
 kColorLightGray <- "#cccccc"
 
@@ -71,7 +72,33 @@ PlotMetrics <- function(data) {
     geom_line(aes(y = moving_7d_avg), color = kColorDarkBlue, size = 1)
 }
 
-PrepDataForPlotAvgMetricsPerWeekday <- function(data) {
+PrepDataForPlotWeeklyMetrics <- function(data) {
+  assert_that(is.data.frame(data))
+  assert_that("date" %in% names(data))
+  assert_that(sum(purrr::map_lgl(data, is.numeric)) > 0)
+  data_metrics <- data %>%
+    dplyr::select(date, where(is.numeric)) %>%
+    dplyr::mutate(
+      date = lubridate::floor_date(date, "weeks", week_start = 1)) %>%
+    dplyr::group_by(date) %>%
+    dplyr::summarise(across(everything(), sum), .groups = "drop_last") %>%
+    tidyr::pivot_longer(!date, names_to = "metric", values_to = "sum")
+  return(data_metrics)
+}
+
+PlotWeeklyMetrics <- function(data) {
+  data_metrics <- PrepDataForPlotWeeklyMetrics(data)
+  assert_that(is.data.frame(data_metrics))
+  assert_that(all(c("date", "metric", "sum") %in% names(data_metrics)))
+  ggplot(data_metrics, aes(date, sum)) +
+    theme_bw(base_size = kPlotSize) +
+    theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
+    facet_wrap(~metric, scales = "free") +
+    geom_col(fill = kColorLightBlue, show.legend = FALSE) +
+    geom_smooth(method = "loess", colour = kColorDarkBlue)
+}
+
+PrepDataForPlotWeekdayMetrics <- function(data) {
   assert_that(is.data.frame(data))
   assert_that("date" %in% names(data))
   assert_that(sum(purrr::map_lgl(data, is.numeric)) > 0)
@@ -93,8 +120,8 @@ PrepDataForPlotAvgMetricsPerWeekday <- function(data) {
   return(data_metrics)
 }
 
-PlotAvgMetricsPerWeekday <- function(data) {
-  data_metrics <- PrepDataForPlotAvgMetricsPerWeekday(data)
+PlotWeekdayMetrics <- function(data) {
+  data_metrics <- PrepDataForPlotWeekdayMetrics(data)
   assert_that(is.data.frame(data_metrics))
   assert_that(all(c("date", "metric", "mean", "se") %in% names(data_metrics)))
   ggplot(data_metrics, aes(date, mean)) +
