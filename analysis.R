@@ -9,6 +9,7 @@
 #   PlotMetrics(data %>% dplyr::select(date, VeryActiveMinutes))
 #   PlotWeeklyMetrics(data)
 #   PlotWeekdayMetrics(data)
+#   PlotTimeAtRest(data)
 
 suppressPackageStartupMessages({
   library(dplyr)
@@ -132,4 +133,37 @@ PlotWeekdayMetrics <- function(data) {
     geom_errorbar(aes(ymin = mean - 2 * se, ymax = mean + 2 * se),
                   width = 0.5) +
     scale_fill_manual(values = c(kColorLightBlue, kColorLightGray))
+}
+
+PrepDataForPlotTimeAtRest <- function(data) {
+  assert_that(is.data.frame(data))
+  assert_that(all(c("date", "StartTime", "EndTime") %in% names(data)))
+  data_metrics <- data
+  kFixedYear <- lubridate::year(min(data_metrics$date))
+  for (var in c("StartTime", "EndTime")) {
+    data_metrics$same_day <-
+      lubridate::day(data_metrics[[var]]) == lubridate::day(data_metrics$date)
+    lubridate::day(data_metrics[[var]])[data_metrics$same_day] <- 1
+    lubridate::day(data_metrics[[var]])[!data_metrics$same_day] <- 2
+    lubridate::month(data_metrics[[var]]) <- 1
+    lubridate::year(data_metrics[[var]]) <- kFixedYear
+  }
+  data_metrics <- data_metrics %>%
+    dplyr::select(date, StartTime, EndTime) %>%
+    tidyr::pivot_longer(c(StartTime, EndTime), names_to = "metric",
+                        values_to = "time") %>%
+    dplyr::mutate(metric = factor(metric, levels = c("StartTime", "EndTime")))
+  return(data_metrics)
+}
+
+PlotTimeAtRest <- function(data, histogram_bins = 50) {
+  data_metrics <- PrepDataForPlotTimeAtRest(data)
+  assert_that(is.data.frame(data_metrics))
+  assert_that(all(c("date", "metric", "time") %in% names(data_metrics)))
+  ggplot(data_metrics, aes(time)) +
+    theme_bw(base_size = kPlotSize) +
+    facet_grid(metric ~ .) +
+    geom_histogram(bins = histogram_bins, fill = kColorLightBlue,
+                   color = kColorDarkBlue) +
+    ylab("days")
 }
