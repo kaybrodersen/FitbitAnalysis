@@ -1,0 +1,15 @@
+Package: FitbitAnalysis
+Title: Exploratory Analysis of Fitbit Sensor Data
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Kay H.",
+           family = "Brodersen",
+           role = c("aut", "cre"),
+           email = "khbrodersen@gmail.com",
+           comment = c(ORCID = "0000-0002-7707-090X"))
+Description: Ultra-basic set of R functions for importing a Fitbit archive and running exploratory analyses on top.
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
