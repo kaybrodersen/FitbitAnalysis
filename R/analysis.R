@@ -141,6 +141,7 @@ PrepDataForPlotTimeAtRest <- function(data) {
   data_metrics <- data
   kFixedYear <- lubridate::year(min(data_metrics$date))
   for (var in c("StartTime", "EndTime")) {
+    # TODO: Generalize.
     data_metrics$same_day <-
       lubridate::day(data_metrics[[var]]) == lubridate::day(data_metrics$date)
     lubridate::day(data_metrics[[var]])[data_metrics$same_day] <- 1
@@ -166,4 +167,19 @@ PlotTimeAtRest <- function(data, histogram_bins = 50) {
     geom_histogram(bins = histogram_bins, fill = kColorLightBlue,
                    color = kColorDarkBlue) +
     ylab("days")
+}
+
+PlotMinutesAwakeVsStartHour <- function(data) {
+  assert_that(is.data.frame(data))
+  assert_that(all(c("date", "StartTime") %in% names(data)))
+  data_metrics <- data %>%
+    dplyr::mutate(
+      StartHour = as.numeric(difftime(StartTime, as.POSIXct(date),
+                                      units = "hours")),
+      HoursAsleep = MinutesAsleep / 60
+    )
+  ggplot(data_metrics, aes(StartHour, MinutesAwake)) +
+    theme_bw(base_size = kPlotSize) +
+    geom_point(size = 1) +
+    geom_smooth(method = "lm")
 }
