@@ -1,24 +1,3 @@
-# Functions for basic exploratory analysis of Fitbit sensor data.
-#
-# Example session:
-#   source("lib.R")
-#   source("analysis.R")
-#   data <- LoadFitbitData("/path/to/MyFitbitData/FirstnameLastname/")
-#   head(data)
-#   PlotMetrics(data)
-#   PlotMetrics(data %>% dplyr::select(date, VeryActiveMinutes))
-#   PlotWeeklyMetrics(data)
-#   PlotWeekdayMetrics(data)
-#   PlotTimeAtRest(data)
-
-suppressPackageStartupMessages({
-  library(dplyr)
-  library(ggplot2)
-  library(lubridate)
-  library(tidyr)
-  library(zoo)
-})
-
 kPlotSize = 16
 kColorLightBlue <- "#9fc5e8"
 kColorDarkBlue <- "#0b5394"
@@ -60,6 +39,7 @@ PrepDataForPlotMetrics <- function(data) {
   return(data_metrics)
 }
 
+#' @export
 PlotMetrics <- function(data) {
   data_metrics <- PrepDataForPlotMetrics(data)
   assert_that(is.data.frame(data_metrics))
@@ -82,11 +62,13 @@ PrepDataForPlotWeeklyMetrics <- function(data) {
     dplyr::mutate(
       date = lubridate::floor_date(date, "weeks", week_start = 1)) %>%
     dplyr::group_by(date) %>%
-    dplyr::summarise(across(everything(), sum), .groups = "drop_last") %>%
+    dplyr::summarise(dplyr::across(dplyr::everything(), sum),
+                     .groups = "drop_last") %>%
     tidyr::pivot_longer(!date, names_to = "metric", values_to = "sum")
   return(data_metrics)
 }
 
+#' @export
 PlotWeeklyMetrics <- function(data) {
   data_metrics <- PrepDataForPlotWeeklyMetrics(data)
   assert_that(is.data.frame(data_metrics))
@@ -114,13 +96,15 @@ PrepDataForPlotWeekdayMetrics <- function(data) {
     dplyr::select(date, where(is.numeric)) %>%
     dplyr::mutate(date = DateToWeekday(date)) %>%
     dplyr::group_by(date) %>%
-    dplyr::summarise(across(everything(), stat_funs), .groups = "drop_last") %>%
+    dplyr::summarise(dplyr::across(dplyr::everything(), stat_funs),
+                     .groups = "drop_last") %>%
     tidyr::pivot_longer(!date, c("metric", "statistic"), names_sep = "_") %>%
     tidyr::pivot_wider(names_from = "statistic") %>%
     dplyr::mutate(is_weekend = date %in% c("Sat", "Sun"))
   return(data_metrics)
 }
 
+#' @export
 PlotWeekdayMetrics <- function(data) {
   data_metrics <- PrepDataForPlotWeekdayMetrics(data)
   assert_that(is.data.frame(data_metrics))
@@ -157,6 +141,7 @@ PrepDataForPlotTimeAtRest <- function(data) {
   return(data_metrics)
 }
 
+#' @export
 PlotTimeAtRest <- function(data, histogram_bins = 50) {
   data_metrics <- PrepDataForPlotTimeAtRest(data)
   assert_that(is.data.frame(data_metrics))
@@ -169,15 +154,14 @@ PlotTimeAtRest <- function(data, histogram_bins = 50) {
     ylab("days")
 }
 
+#' @export
 PlotMinutesAwakeVsStartHour <- function(data) {
   assert_that(is.data.frame(data))
   assert_that(all(c("date", "StartTime") %in% names(data)))
+  diffhours <- function(a, b) as.numeric(difftime(a, b, units = "hours"))
   data_metrics <- data %>%
-    dplyr::mutate(
-      StartHour = as.numeric(difftime(StartTime, as.POSIXct(date),
-                                      units = "hours")),
-      HoursAsleep = MinutesAsleep / 60
-    )
+    dplyr::mutate(StartHour = diffhours(StartTime, as.POSIXct(date)),
+                  HoursAsleep = MinutesAsleep / 60)
   ggplot(data_metrics, aes(StartHour, MinutesAwake)) +
     theme_bw(base_size = kPlotSize) +
     geom_point(size = 1) +

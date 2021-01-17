@@ -1,18 +1,3 @@
-# Library functions for importing and parsing Fitbit sensor data.
-# Author: khbrodersen@gmail.com.
-#
-# The top-level function is `LoadFitbitData()`, which takes in the path to a
-# Fitbit download directory and returns a data frame of activity and sleep
-# metrics, keyed on `date`.
-
-suppressPackageStartupMessages({
-  library(assertthat)
-  library(dplyr)
-  library(jsonlite)
-  library(lubridate)
-  library(purrr)
-})
-
 DropNA <- function(x) {
   assert_that(is.vector(x))
   return(x[!is.na(x)])
@@ -64,7 +49,7 @@ ProcessActivityLogs <- function(activity_logs) {
     names(activity_logs[[i]])[2] <- names(activity_logs)[i]
   }
   activity_data <- activity_logs %>%
-    purrr::reduce(full_join, by = "dateTime") %>%
+    purrr::reduce(dplyr::full_join, by = "dateTime") %>%
     dplyr::mutate(
       date = as.Date(lubridate::parse_date_time(dateTime, "%m/%d/%y H:M:S")),
       SedentaryMinutes = as.numeric(SedentaryMinutes),
@@ -114,6 +99,29 @@ ProcessSleepLogs <- function(sleep_logs) {
   return(sleep_data)
 }
 
+#' @title Load a Fitbit archive from disk
+#'
+#' @description Load a Fitbit archive, as downloaded from fitbit.com, Settings,
+#' Data Export, Request Data. The downloaded zip file must be extracted into a
+#' folder. See below for an example.
+#'
+#' @param input_path String containing the path of the extracted Fitbit archive.
+#' The string should end on a 'FirstnameLastname' directory.
+#'
+#' @return A data frame keyed on `date` and one column per metric.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' data <- LoadFitbitData("/path/to/MyFitbitData/FirstnameLastname/")
+#' head(data)
+#' PlotMetrics(data)
+#' PlotMetrics(data %>% dplyr::select(date, VeryActiveMinutes))
+#' PlotWeeklyMetrics(data)
+#' PlotWeekdayMetrics(data)
+#' PlotTimeAtRest(data)
+#' PlotMinutesAwakeVsStartHour(data)
+#' }
 LoadFitbitData <- function(input_path) {
   activity_logs <- LoadActivityLogs(input_path)
   activity_data <- ProcessActivityLogs(activity_logs)
