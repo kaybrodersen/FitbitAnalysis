@@ -21,7 +21,7 @@ se <- function(x, na.rm = FALSE) {
   if (isTRUE(na.rm)) {
     x <- x[!is.na(x)]
   }
-  return(sd(x) / sqrt(length(x)))
+  return(stats::sd(x) / sqrt(length(x)))
 }
 
 PrepDataForPlotMetrics <- function(data) {
@@ -39,6 +39,11 @@ PrepDataForPlotMetrics <- function(data) {
   return(data_metrics)
 }
 
+#' Plot daily values of one or more metrics over time
+#'
+#' @param data Data frame keyed on `date`, with one or more metrics columns
+#' containing numeric values.
+#'
 #' @export
 PlotMetrics <- function(data) {
   data_metrics <- PrepDataForPlotMetrics(data)
@@ -68,6 +73,11 @@ PrepDataForPlotWeeklyMetrics <- function(data) {
   return(data_metrics)
 }
 
+#' Plot weekly sums of one or more metrics over time
+#'
+#' @param data Data frame keyed on `date`, with one or more metrics columns
+#' containing numeric values.
+#'
 #' @export
 PlotWeeklyMetrics <- function(data) {
   data_metrics <- PrepDataForPlotWeeklyMetrics(data)
@@ -104,6 +114,11 @@ PrepDataForPlotWeekdayMetrics <- function(data) {
   return(data_metrics)
 }
 
+#' Plot day-of-week averages of one or more metrics
+#'
+#' @param data Data frame keyed on `date`, with one or more metrics columns
+#' containing numeric values.
+#'
 #' @export
 PlotWeekdayMetrics <- function(data) {
   data_metrics <- PrepDataForPlotWeekdayMetrics(data)
@@ -141,6 +156,12 @@ PrepDataForPlotTimeAtRest <- function(data) {
   return(data_metrics)
 }
 
+#' Plot times at rest
+#'
+#' @param data Data frame of: date, StartTime, EndTime.
+#'
+#' @param histogram_bins Number of histogram bins for plotting.
+#'
 #' @export
 PlotTimeAtRest <- function(data, histogram_bins = 50) {
   data_metrics <- PrepDataForPlotTimeAtRest(data)
@@ -154,10 +175,14 @@ PlotTimeAtRest <- function(data, histogram_bins = 50) {
     ylab("days")
 }
 
+#' Plot number of minutes awake vs. start time of time at rest
+#'
+#' @param data Data frame of: date, StartTime, MinutesAsleep.
+#'
 #' @export
 PlotMinutesAwakeVsStartHour <- function(data) {
   assert_that(is.data.frame(data))
-  assert_that(all(c("date", "StartTime") %in% names(data)))
+  assert_that(all(c("date", "StartTime", "MinutesAsleep") %in% names(data)))
   diffhours <- function(a, b) as.numeric(difftime(a, b, units = "hours"))
   data_metrics <- data %>%
     dplyr::mutate(StartHour = diffhours(StartTime, as.POSIXct(date)),

@@ -77,7 +77,7 @@ LoadSleepLogs <- function(input_path) {
 ProcessSleepLogs <- function(sleep_logs) {
   assert_that(is.data.frame(sleep_logs), nrow(sleep_logs) > 0)
   sleep_data <- sleep_logs %>%
-    setNames(PascalCase(names(.))) %>%
+    stats::setNames(PascalCase(names(.))) %>%
     dplyr::mutate(
       StartTime = lubridate::as_datetime(StartTime),
       EndTime = lubridate::as_datetime(EndTime)) %>%
