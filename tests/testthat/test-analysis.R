@@ -21,3 +21,21 @@ test_that("DateToWeekday works on standard input", {
   expect_equal(DateToWeekday(as.Date("2021-01-01")),
                factor("Fri", levels = weekdays))
 })
+
+test_that("se rejects bad input", {
+  expect_error(se(c(1, 2, 3), na.rm = "foo"), "not a flag")
+  expect_error(se(c(1, 2, 3), na.rm = c(TRUE, TRUE)), "not a flag")
+})
+
+test_that("se works with `na.rm = FALSE` (default)", {
+  expect_equal(se(c(1, 2, NA_real_)), NA_real_)
+  expect_equal(se(NA_real_), NA_real_)
+  expect_equal(se(c(1, 2, 3)), sqrt(((1-2)^2 + (3-2)^2)) / sqrt(2) / sqrt(3))
+})
+
+test_that("se works with `na.rm = TRUE`", {
+  expect_equal(se(c(1, 2, 3), na.rm = TRUE),
+               sqrt(((1-2)^2 + (3-2)^2)) / sqrt(2) / sqrt(3))
+  expect_equal(se(c(1, 2, NA_real_, 3), na.rm = TRUE),
+               sqrt(((1-2)^2 + (3-2)^2)) / sqrt(2) / sqrt(3))
+})

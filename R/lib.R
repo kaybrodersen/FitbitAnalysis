@@ -1,5 +1,5 @@
 DropNA <- function(x) {
-  assert_that(is.vector(x))
+  assert_that(is.vector(x) || is.null(x))
   return(x[!is.na(x)])
 }
 
