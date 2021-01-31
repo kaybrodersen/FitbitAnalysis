@@ -1,5 +1,9 @@
 # FitbitAnalysis
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/kaybrodersen/FitbitAnalysis/workflows/R-CMD-check/badge.svg)](https://github.com/kaybrodersen/FitbitAnalysis/actions)
+<!-- badges: end -->
+
 Fitbit devices collect large amounts of sensor data. This package provides a few basic functions to help you start exploring your data in R.
 
 ## Step 1: Installing the package
