@@ -35,3 +35,6 @@ PlotWeekdayMetrics(data)
 PlotTimeAtRest(data)
 PlotMinutesAwakeVsStartHour(data)
 ```
+
+To create an HTML of the outputs of all of the above functions, run the
+`rmd/my_overview.Rmd` markdown report that's included in the package.

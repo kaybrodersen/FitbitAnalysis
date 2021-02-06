@@ -1,0 +1,75 @@
+---
+title: "My Fitbit overview"
+output: html_document
+---
+
+*How to run this doc*
+
+1. Install the [FitbitAnalysis](https://github.com/kaybrodersen/FitbitAnalysis)
+   package.
+2. Update `kInputPath` below to point to your downloaded Fitbit archive.
+3. Open this doc in RStudio and run 'Knit' or
+   `knitr::knit("rmd/my_overview.Rmd")`. To check the location of the doc, try:
+   `system.file("rmd", "my_overview.Rmd", package = "FitbitAnalysis")`.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE}
+options(warn = -1)
+```
+
+## Input data
+
+```{r constants}
+kInputPath <- "/path/to/MyFitbitData/FirstnameLastname/"
+```
+
+```{r}
+library(FitbitAnalysis)
+data <- suppressMessages(LoadFitbitData(kInputPath))
+head(data)
+```
+
+## Daily metrics
+
+Raw daily values of all metrics in the data, including a weekly moving average.
+
+```{r}
+PlotMetrics(data)
+```
+
+## Weekly sums
+
+This plot shows weekly data, which may show long-term trends more easily than
+daily values.
+
+```{r}
+PlotWeeklyMetrics(data)
+```
+
+## Day-of-week averages
+
+This plot highlights day-of-week patterns across all metrics.
+
+```{r}
+PlotWeekdayMetrics(data)
+```
+
+## Time at rest
+
+This plot shows the distribution of beginning and end of sleep times.
+
+```{r}
+PlotTimeAtRest(data)
+```
+
+## Minutes awake vs. start hour
+
+This plot regresses minutes awake on the start hour of every night to highlight
+how the two are related.
+
+```{r}
+PlotMinutesAwakeVsStartHour(data)
+```
