@@ -1,4 +1,4 @@
-kPlotSize = 16
+kPlotSize = 12
 kColorLightBlue <- "#9fc5e8"
 kColorDarkBlue <- "#0b5394"
 kColorLightGray <- "#cccccc"
@@ -49,7 +49,7 @@ PlotMetrics <- function(data) {
   data_metrics <- PrepDataForPlotMetrics(data)
   assert_that(is.data.frame(data_metrics))
   assert_that(all(c("date", "metric", "value") %in% names(data_metrics)))
-  ggplot(data_metrics, aes(date, value)) +
+  ggplot(tidyr::drop_na(data_metrics), aes(date, value)) +
     theme_bw(base_size = kPlotSize) +
     theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
     facet_wrap(~metric, scales = "free") +
@@ -83,12 +83,13 @@ PlotWeeklyMetrics <- function(data) {
   data_metrics <- PrepDataForPlotWeeklyMetrics(data)
   assert_that(is.data.frame(data_metrics))
   assert_that(all(c("date", "metric", "sum") %in% names(data_metrics)))
-  ggplot(data_metrics, aes(date, sum)) +
+  ggplot(tidyr::drop_na(data_metrics), aes(date, sum)) +
     theme_bw(base_size = kPlotSize) +
     theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
     facet_wrap(~metric, scales = "free") +
     geom_col(fill = kColorLightBlue, show.legend = FALSE) +
-    geom_smooth(method = "loess", colour = kColorDarkBlue)
+    geom_smooth(method = "loess", formula = "y ~ x", na.rm = TRUE,
+                colour = kColorDarkBlue)
 }
 
 PrepDataForPlotWeekdayMetrics <- function(data) {
@@ -170,7 +171,7 @@ PlotTimeAtRest <- function(data, histogram_bins = 50) {
   ggplot(data_metrics, aes(time)) +
     theme_bw(base_size = kPlotSize) +
     facet_grid(metric ~ .) +
-    geom_histogram(bins = histogram_bins, fill = kColorLightBlue,
+    geom_histogram(bins = histogram_bins, na.rm = TRUE, fill = kColorLightBlue,
                    color = kColorDarkBlue) +
     ylab("days")
 }
@@ -189,6 +190,6 @@ PlotMinutesAwakeVsStartHour <- function(data) {
                   HoursAsleep = MinutesAsleep / 60)
   ggplot(data_metrics, aes(StartHour, MinutesAwake)) +
     theme_bw(base_size = kPlotSize) +
-    geom_point(size = 1) +
-    geom_smooth(method = "lm")
+    geom_point(size = 1, na.rm = TRUE) +
+    geom_smooth(method = "lm", formula = "y ~ x", na.rm = TRUE)
 }
