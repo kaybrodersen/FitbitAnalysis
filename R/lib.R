@@ -1,8 +1,3 @@
-DropNA <- function(x) {
-  assert_that(is.vector(x) || is.null(x))
-  return(x[!is.na(x)])
-}
-
 PascalCase <- function(x) {
   assert_that(is.character(x))
   return(gsub("(^|[^[:alnum:]])([[:alnum:]])", "\\U\\2", x, perl = TRUE))
