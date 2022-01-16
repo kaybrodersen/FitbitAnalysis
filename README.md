@@ -2,6 +2,7 @@
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/kaybrodersen/FitbitAnalysis/workflows/R-CMD-check/badge.svg)](https://github.com/kaybrodersen/FitbitAnalysis/actions)
+[![Codecov test coverage](https://codecov.io/gh/kaybrodersen/FitbitAnalysis/branch/master/graph/badge.svg)](https://app.codecov.io/gh/kaybrodersen/FitbitAnalysis?branch=master)
 <!-- badges: end -->
 
 Fitbit devices collect large amounts of sensor data. This package provides a few basic functions to help you start exploring your data in R.
