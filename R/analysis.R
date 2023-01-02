@@ -176,18 +176,61 @@ PlotTimeAtRest <- function(data, histogram_bins = 50) {
     ylab("days")
 }
 
+#' Plot a CDF of times at rest
+#'
+#' @param data Data frame of: date, StartTime, EndTime, MinutesAsleep.
+#'
+#' @export
+PlotTimeAtRestCDF <- function(data) {
+  assert_that(is.data.frame(data))
+  assert_that(
+    all(c("date", "StartTime", "EndTime", "MinutesAsleep") %in% names(data)))
+  diffhours <- function(a, b) as.numeric(difftime(a, b, units = "hours"))
+  data_metrics <- data %>%
+    dplyr::mutate(StartHour = diffhours(StartTime, as.POSIXct(date)),
+                  EndHour = diffhours(EndTime, as.POSIXct(date)),
+                  HoursAsleep = MinutesAsleep / 60)
+  ecdf_start_hour <- Hmisc::Ecdf(data_metrics$StartHour, pl = FALSE)
+  ecdf_end_hour <- Hmisc::Ecdf(data_metrics$EndHour, pl = FALSE)
+  ecdf_hours_asleep <- Hmisc::Ecdf(data_metrics$HoursAsleep, pl = FALSE)
+  ecdf <- rbind(
+    data.frame(metric = "StartHour",
+               x = ecdf_start_hour$x,
+               y = ecdf_start_hour$y),
+    data.frame(metric = "EndHour",
+               x = ecdf_end_hour$x,
+               y = ecdf_end_hour$y),
+    data.frame(metric = "HoursAsleep",
+               x = ecdf_hours_asleep$x,
+               y = ecdf_hours_asleep$y)
+  ) %>%
+    dplyr::filter(y >= 0.01, y <= 0.99)
+  ecdf$metric <- factor(
+    ecdf$metric,
+    levels = c("StartHour", "EndHour", "HoursAsleep")
+  )
+  ggplot(ecdf, aes(x, y)) +
+    theme_bw(base_size = kPlotSize) +
+    facet_grid(. ~ metric, scales = "free_x") +
+    geom_line() +
+    xlab("") +
+    ylab("")
+}
+
 #' Plot number of minutes awake vs. start time of time at rest
 #'
 #' @param data Data frame of: date, StartTime, MinutesAsleep.
+#' @param max_start_hour Maximum start hour to clip plot at (e.g., 28).
 #'
 #' @export
-PlotMinutesAwakeVsStartHour <- function(data) {
+PlotMinutesAwakeVsStartHour <- function(data, max_start_hour = Inf) {
   assert_that(is.data.frame(data))
   assert_that(all(c("date", "StartTime", "MinutesAsleep") %in% names(data)))
   diffhours <- function(a, b) as.numeric(difftime(a, b, units = "hours"))
   data_metrics <- data %>%
     dplyr::mutate(StartHour = diffhours(StartTime, as.POSIXct(date)),
-                  HoursAsleep = MinutesAsleep / 60)
+                  HoursAsleep = MinutesAsleep / 60) %>%
+    dplyr::filter(StartHour <= max_start_hour)
   ggplot(data_metrics, aes(StartHour, MinutesAwake)) +
     theme_bw(base_size = kPlotSize) +
     geom_point(size = 1, na.rm = TRUE) +

@@ -4,10 +4,12 @@
 \alias{PlotMinutesAwakeVsStartHour}
 \title{Plot number of minutes awake vs. start time of time at rest}
 \usage{
-PlotMinutesAwakeVsStartHour(data)
+PlotMinutesAwakeVsStartHour(data, max_start_hour = Inf)
 }
 \arguments{
 \item{data}{Data frame of: date, StartTime, MinutesAsleep.}
+
+\item{max_start_hour}{Maximum start hour to clip plot at (e.g., 28).}
 }
 \description{
 Plot number of minutes awake vs. start time of time at rest

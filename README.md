@@ -27,6 +27,7 @@ devtools::install_github("kaybrodersen/FitbitAnalysis")
 library(FitbitAnalysis)
 data <- LoadFitbitData("/path/to/MyFitbitData/FirstnameLastname/")
 
+library(dplyr)
 head(data)
 
 PlotMetrics(data)
@@ -34,6 +35,7 @@ PlotMetrics(data %>% dplyr::select(date, VeryActiveMinutes))
 PlotWeeklyMetrics(data)
 PlotWeekdayMetrics(data)
 PlotTimeAtRest(data)
+PlotTimeAtRestCDF(data)
 PlotMinutesAwakeVsStartHour(data)
 ```
 

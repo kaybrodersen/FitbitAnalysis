@@ -1,6 +1,6 @@
 Package: FitbitAnalysis
 Title: Exploratory Analysis of Fitbit Sensor Data
-Version: 0.0.0.9000
+Version: 0.0.0.91
 Authors@R: 
     person(given = "Kay H.",
            family = "Brodersen",
@@ -11,9 +11,9 @@ Description: Ultra-basic set of R functions for importing a Fitbit archive and r
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
-Imports: assertthat (>= 0.2.0), dplyr, ggplot2, jsonlite, lubridate, magrittr, tidyr, purrr, zoo
+Imports: assertthat (>= 0.2.0), dplyr, ggplot2, Hmisc, jsonlite, lubridate, magrittr, tidyr, purrr, zoo
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Suggests: 
     covr,
     testthat (>= 3.0.0)
