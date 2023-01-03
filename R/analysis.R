@@ -176,15 +176,11 @@ PlotTimeAtRest <- function(data, histogram_bins = 50) {
     ylab("days")
 }
 
-#' Plot a CDF of times at rest
-#'
-#' @param data Data frame of: date, StartTime, EndTime, MinutesAsleep.
-#'
-#' @export
-PlotTimeAtRestCDF <- function(data) {
+PrepDataForPlotTimeAtRestCDF <- function(data) {
   assert_that(is.data.frame(data))
   assert_that(
-    all(c("date", "StartTime", "EndTime", "MinutesAsleep") %in% names(data)))
+    all(c("date", "StartTime", "EndTime", "MinutesAsleep") %in% names(data))
+  )
   diffhours <- function(a, b) as.numeric(difftime(a, b, units = "hours"))
   data_metrics <- data %>%
     dplyr::mutate(StartHour = diffhours(StartTime, as.POSIXct(date)),
@@ -193,7 +189,7 @@ PlotTimeAtRestCDF <- function(data) {
   ecdf_start_hour <- Hmisc::Ecdf(data_metrics$StartHour, pl = FALSE)
   ecdf_end_hour <- Hmisc::Ecdf(data_metrics$EndHour, pl = FALSE)
   ecdf_hours_asleep <- Hmisc::Ecdf(data_metrics$HoursAsleep, pl = FALSE)
-  ecdf <- rbind(
+  data_metrics <- rbind(
     data.frame(metric = "StartHour",
                x = ecdf_start_hour$x,
                y = ecdf_start_hour$y),
@@ -203,13 +199,26 @@ PlotTimeAtRestCDF <- function(data) {
     data.frame(metric = "HoursAsleep",
                x = ecdf_hours_asleep$x,
                y = ecdf_hours_asleep$y)
-  ) %>%
-    dplyr::filter(y >= 0.01, y <= 0.99)
-  ecdf$metric <- factor(
+  )
+  # Reduce CDFs to the range between 1% and 99%.
+  data_metrics <- data_metrics %>% dplyr::filter(y >= 0.01, y <= 0.99)
+  data_metrics$metric <- factor(
     ecdf$metric,
     levels = c("StartHour", "EndHour", "HoursAsleep")
   )
-  ggplot(ecdf, aes(x, y)) +
+  return(data_metrics)
+}
+
+#' Plot a CDF of times at rest
+#'
+#' @param data Data frame of: date, StartTime, EndTime, MinutesAsleep.
+#'
+#' @export
+PlotTimeAtRestCDF <- function(data) {
+  data_metrics <- PrepDataForPlotTimeAtRestCDF(data)
+  assert_that(is.data.frame(data_metrics))
+  assert_that(all(c("metric", "x", "y") %in% names(data_metrics)))
+  ggplot(data_metrics, aes(x, y)) +
     theme_bw(base_size = kPlotSize) +
     facet_grid(. ~ metric, scales = "free_x") +
     geom_line() +
